@@ -19,11 +19,13 @@ extra-source-files:  CHANGELOG.md
 executable minikell
   main-is:             Main.hs
   other-modules:       Mine
-  other-extensions:    FlexibleContexts
-                       , StandaloneDeriving
+  extensions:          FlexibleContexts, StandaloneDeriving
+  -- other-extensions:
   build-depends:       base >=4.13 && <4.14
                        , containers
-                       , fused-effects
+                       , random
                        , mtl
+                       , transformers
+                       , MonadRandom
   hs-source-dirs:      app
   default-language:    Haskell2010
