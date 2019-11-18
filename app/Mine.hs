@@ -1,7 +1,16 @@
 module Mine
-  ( Difficulty(..)
+  ( Board(..)
+  , Cell(..)
+  , Difficulty(..)
+  , Overlay(..)
+  , Point(..)
+  , (!?)
   , createBoard
   , emptyBoard
+  , mkBoard
+  , flagCell
+  , getDifficulty
+  , revealCell
   ) where
 
 import Data.Map.Strict(Map(..), findWithDefault, empty, insert)
@@ -17,21 +26,22 @@ data Cell
   = Empty Overlay
   | Numbered Int Overlay
   | Mine Overlay
+  deriving (Eq, Ord)
 
 instance Show Cell where
   show (Empty Hidden) = " "
   show (Numbered _ Hidden) = " "
   show (Mine Hidden) = " "
-  show (Empty Flagged) = "E"
-  show (Numbered n Flagged) = show n
-  show (Mine Flagged) = "?"
+  show (Empty Open) = "O"
+  show (Numbered n Open) = show n
+  show (Mine Open) = "M"
+  show _ = "?"
 
-data Difficulty = Easy | Mid | Hard
-
-mkBoard :: Map (Int, Int) Cell -> Int -> Board
+type Point = (Int, Int)
+mkBoard :: Map Point Cell -> Int -> Board
 mkBoard m s = Board $ (,) m s
 emptyBoard = Board (empty, 0)
-newtype Board = Board { unBoard :: (Map (Int, Int) Cell, Int) }
+newtype Board = Board { unBoard :: (Map Point Cell, Int) }
 
 instance Show Board where
   show b = let (board, size) = unBoard b
@@ -52,6 +62,7 @@ getDifficulty Hard = (24, 99)
 
 (!?) :: Map Point Cell -> Point -> Cell
 (!?) m k = findWithDefault (Empty Hidden) k m
+
 genNumbers :: (Enum a, Enum b) => (a, b) -> [(a, b)]
 genNumbers (x, y) = [ (pred x, pred y)
                     , (x, pred y)
