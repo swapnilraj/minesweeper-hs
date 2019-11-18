@@ -94,7 +94,18 @@ createBoard diff = do
         let (board', _) = unBoard board_
         put $ mkBoard (placeNumber board' num) size
 
-placeNumber :: Ord k => Map k Cell -> k -> Map k Cell
+flagCell :: Cell -> Cell
+flagCell (Empty Hidden) = Empty Flagged
+flagCell (Numbered n Hidden) = Numbered n Flagged
+flagCell (Mine Hidden) = Mine Flagged
+flagCell x = x
+
+revealCell :: Cell -> Cell
+revealCell (Empty Hidden) = Empty Open
+revealCell (Numbered n Hidden) = Numbered n Open
+revealCell (Mine Hidden) = Mine Open
+revealCell x = x
+
 placeNumber :: Map Point Cell -> Point -> Map Point Cell
 placeNumber board loc = case (board !? loc) of
                         Empty{} -> insert loc (Numbered 1 Hidden) board
