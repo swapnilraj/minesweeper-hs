@@ -4,16 +4,14 @@ module Mine
   , emptyBoard
   ) where
 
-import Data.Map.Strict(Map(..), (!?), empty, insert)
+import Data.Map.Strict(Map(..), findWithDefault, empty, insert)
 import Data.List(intercalate, nub)
 import Control.Monad(forM_)
 import Control.Monad.Trans.State(StateT(..), runStateT, get, put)
 import Control.Monad.Trans(liftIO)
 import System.Random(randomRIO)
 
-import Debug.Trace
-
-data Overlay = Hidden | Flagged deriving (Show, Eq, Ord, Enum)
+data Overlay = Open | Hidden | Flagged deriving (Show, Eq, Ord, Enum)
 
 data Cell
   = Empty Overlay
@@ -41,16 +39,19 @@ instance Show Board where
                points = rows <$> [0..size-1]
                showRow row =
                  let c = (!?) board
-                     f Nothing = "| "
-                     f (Just x) = "|" ++ show x
+                     f x = '|':show x
                   in concat $ f <$> (c <$> row)
             in unlines $ showRow <$> points
+
+data Difficulty = Easy | Mid | Hard
 
 getDifficulty :: Difficulty -> (Int, Int)
 getDifficulty Easy = (8, 10)
 getDifficulty Mid = (16, 40)
 getDifficulty Hard = (24, 99)
 
+(!?) :: Map Point Cell -> Point -> Cell
+(!?) m k = findWithDefault (Empty Hidden) k m
 genNumbers :: (Enum a, Enum b) => (a, b) -> [(a, b)]
 genNumbers (x, y) = [ (pred x, pred y)
                     , (x, pred y)
@@ -83,11 +84,11 @@ createBoard diff = do
         put $ mkBoard (placeNumber board' num) size
 
 placeNumber :: Ord k => Map k Cell -> k -> Map k Cell
+placeNumber :: Map Point Cell -> Point -> Map Point Cell
 placeNumber board loc = case (board !? loc) of
-                        (Just (Empty{})) -> insert loc (Numbered 1 Hidden) board
-                        (Just (Numbered n _)) -> insert loc (Numbered (succ n) Hidden) board
-                        (Just (Mine{})) -> board
-                        Nothing -> insert loc (Numbered 1 Hidden) board
+                        Empty{} -> insert loc (Numbered 1 Hidden) board
+                        (Numbered n _) -> insert loc (Numbered (succ n) Hidden) board
+                        Mine{} -> board
 
 genMines :: Int -> Int -> IO [(Int, Int)]
 genMines size n = nub <$> (sequence $ replicate n $ tups)
