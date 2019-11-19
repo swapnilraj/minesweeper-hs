@@ -15,9 +15,11 @@ import Mine
   , Overlay(..)
   , Point(..)
   , (!?)
-  , mkBoard
-  , flagCell
   , exploreCells
+  , flagCell
+  , mkBoard
+  , numMines
+  , numUnOpenedCells
   )
 
 data Move = Flag | Reveal deriving (Show, Eq, Ord, Read)
@@ -36,8 +38,10 @@ stepBoard move loc b =
         Reveal -> reveal
 
 gamePlay :: StateT Board IO ()
-gamePlay = do
+gamePlay mines = do
   board <- get
+  let unopened = numUnOpenedCells board
+  liftIO $ print unopened
   liftIO $ print board
   input <- liftIO $ getLine
   let point = (read input) :: (Int, Int)

@@ -7,13 +7,16 @@ module Mine
   , (!?)
   , createBoard
   , emptyBoard
-  , mkBoard
+  , exploreCells
   , flagCell
   , getDifficulty
-  , exploreCells
+  , mkBoard
+  , numMines
+  , numUnOpenedCells
   ) where
 
-import Data.Map.Strict(Map(..), findWithDefault, empty, insert)
+import Prelude hiding (foldl)
+import Data.Map.Strict(Map(..), elems, empty, foldl, findWithDefault, insert)
 import Data.List(intercalate, nub)
 import qualified Data.Set as S(Set(..), insert, empty, notMember)
 import Control.Monad(forM_)
@@ -41,8 +44,9 @@ instance Show Cell where
 type Point = (Int, Int)
 mkBoard :: Map Point Cell -> Int -> Board
 mkBoard m s = Board $ (,) m s
-emptyBoard = Board (empty, 0)
-newtype Board = Board { unBoard :: (Map Point Cell, Int) }
+emptyBoard = mkBoard empty 0
+type Size = Int
+newtype Board = Board { unBoard :: (Map Point Cell, Size) }
 
 instance Show Board where
   show b = let (board, size) = unBoard b
@@ -127,6 +131,30 @@ exploreCells (p:ps) visited b' =
     case (cell) of
       Empty{} -> exploreCells (ps ++ neighboursToExplore) visited' board'
       _ -> exploreCells ps visited' board'
+
+numUnOpenedCells :: Board -> Int
+numUnOpenedCells b'
+  = let (b, sz) = unBoard b'
+        countUnopened n cell
+          | isOpen cell = n
+          | otherwise = succ n
+      in (foldl countUnopened 0 b) + (sz * sz - (length $ elems b))
+  where
+    isOpen (Empty Open) = True
+    isOpen (Numbered n Open) = True
+    isOpen (Mine Open) = True
+    isOpen _ = False
+
+numMines :: Board -> Int
+numMines b'
+  = let (b, sz) = unBoard b'
+        countMines n cell
+          | isMine cell = succ n
+          | otherwise = n
+      in foldl countMines 0 b
+  where
+    isMine Mine{} = True
+    isMine _ = False
 
 genMines :: Int -> Int -> IO [(Int, Int)]
 genMines size n = nub <$> (sequence $ replicate n $ tups)
