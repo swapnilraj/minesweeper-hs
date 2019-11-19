@@ -10,7 +10,7 @@ module Mine
   , mkBoard
   , flagCell
   , getDifficulty
-  , revealCell
+  , exploreCells
   ) where
 
 import Data.Map.Strict(Map(..), findWithDefault, empty, insert)
@@ -110,24 +110,8 @@ flagCell x = x
 revealCell :: Point -> Cell -> Cell
 revealCell loc (Empty Hidden) = Empty Open
 revealCell loc (Numbered n Hidden) = Numbered n Open
-revealCell loc (Mine Hidden) = Mine Open
+revealCell loc (Mine Hidden) = error "Mines should not be opened?" -- Should this be absurd?
 revealCell loc x = x
-
--- exploreCells :: Point -> ST.State (S.Set Point, Board)  ()
--- exploreCells loc = do
---   lol <- ST.get
---   let (visited, b') = lol
---       (b, sz) = unBoard b'
---       cell = b !? loc
---       ncell = revealCell loc ncell
---   case (loc `S.member` visited) of
---     False -> do
---       put ((S.insert loc visited), mkBoard (insert loc ncell b) sz)
---       t <- ST.get
---       ST.execState (sequence (exploreCells <$> (clip sz (genNumbers loc)))) t
---       -- ST.execState (sequence $ (exploreCells <$> (clip sz (genNumbers loc))) t)
---     True -> pure ()
---   where mkState m s = (,) m s
 
  -- Neighbours to explore   Visited        Board
 exploreCells :: [Point] -> S.Set Point -> Board -> Board

@@ -1,10 +1,13 @@
 module Gameplay
   ( Move(..)
   , stepBoard
+  , gamePlay
   ) where
 
 import Data.Map.Strict(Map(..), empty, insert)
+import qualified Data.Set as S(empty)
 import Control.Monad.Trans.State(StateT(..), runStateT, get, put)
+import Control.Monad.Trans(liftIO)
 
 import Mine
   ( Board(..)
@@ -14,23 +17,35 @@ import Mine
   , (!?)
   , mkBoard
   , flagCell
-  , revealCell
+  , exploreCells
   )
 
-data Move = Flag | Reveal deriving (Show, Eq, Ord, Enum)
+data Move = Flag | Reveal deriving (Show, Eq, Ord, Read)
 
-stepBoard :: Point -> Move -> Board -> Either String Board
-stepBoard loc move b =
+stepBoard :: Move -> Point -> Board -> Either String Board
+stepBoard move loc b =
   let (b', sz) = unBoard b
       val = b' !? loc
       flag = Right $ mkBoard (insert loc (flagCell val) b') sz
       reveal = case val of
-                 Mine{} -> Left $ "Error"
-                 _ -> Right $ mkBoard (insert loc (revealCell val) b') sz
+                 Mine{} -> Left $ "Oops! That was a mine"
+                 _ -> Right $ exploreCells [loc] S.empty b
    in
       case move of
         Flag -> flag
         Reveal -> reveal
 
 gamePlay :: StateT Board IO ()
-gamePlay = undefined
+gamePlay = do
+  board <- get
+  liftIO $ print board
+  input <- liftIO $ getLine
+  let point = (read input) :: (Int, Int)
+  input <- liftIO $ getLine
+  let move = (read input) :: Move
+  let new = stepBoard move point board
+  case new of
+    Left e -> liftIO $ print e
+    Right b -> put b
+  gamePlay
+
