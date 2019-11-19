@@ -15,8 +15,9 @@ module Mine
 
 import Data.Map.Strict(Map(..), findWithDefault, empty, insert)
 import Data.List(intercalate, nub)
+import qualified Data.Set as S(Set(..), insert, empty, notMember)
 import Control.Monad(forM_)
-import Control.Monad.Trans.State(StateT(..), runStateT, get, put)
+import Control.Monad.Trans.State(StateT(..), execStateT, get, put)
 import Control.Monad.Trans(liftIO)
 import System.Random(randomRIO)
 
@@ -94,23 +95,54 @@ createBoard diff = do
         let (board', _) = unBoard board_
         put $ mkBoard (placeNumber board' num) size
 
+placeNumber :: Map Point Cell -> Point -> Map Point Cell
+placeNumber board loc = case (board !? loc) of
+                        Empty{} -> insert loc (Numbered 1 Hidden) board
+                        (Numbered n _) -> insert loc (Numbered (succ n) Hidden) board
+                        Mine{} -> board
+
 flagCell :: Cell -> Cell
 flagCell (Empty Hidden) = Empty Flagged
 flagCell (Numbered n Hidden) = Numbered n Flagged
 flagCell (Mine Hidden) = Mine Flagged
 flagCell x = x
 
-revealCell :: Cell -> Cell
-revealCell (Empty Hidden) = Empty Open
-revealCell (Numbered n Hidden) = Numbered n Open
-revealCell (Mine Hidden) = Mine Open
-revealCell x = x
+revealCell :: Point -> Cell -> Cell
+revealCell loc (Empty Hidden) = Empty Open
+revealCell loc (Numbered n Hidden) = Numbered n Open
+revealCell loc (Mine Hidden) = Mine Open
+revealCell loc x = x
 
-placeNumber :: Map Point Cell -> Point -> Map Point Cell
-placeNumber board loc = case (board !? loc) of
-                        Empty{} -> insert loc (Numbered 1 Hidden) board
-                        (Numbered n _) -> insert loc (Numbered (succ n) Hidden) board
-                        Mine{} -> board
+-- exploreCells :: Point -> ST.State (S.Set Point, Board)  ()
+-- exploreCells loc = do
+--   lol <- ST.get
+--   let (visited, b') = lol
+--       (b, sz) = unBoard b'
+--       cell = b !? loc
+--       ncell = revealCell loc ncell
+--   case (loc `S.member` visited) of
+--     False -> do
+--       put ((S.insert loc visited), mkBoard (insert loc ncell b) sz)
+--       t <- ST.get
+--       ST.execState (sequence (exploreCells <$> (clip sz (genNumbers loc)))) t
+--       -- ST.execState (sequence $ (exploreCells <$> (clip sz (genNumbers loc))) t)
+--     True -> pure ()
+--   where mkState m s = (,) m s
+
+ -- Neighbours to explore   Visited        Board
+exploreCells :: [Point] -> S.Set Point -> Board -> Board
+exploreCells [] _ b = b
+exploreCells (p:ps) visited b' =
+  let (b, sz) = unBoard b'
+      cell = b !? p
+      ncell = revealCell p cell
+      visited' = S.insert p visited
+      neighboursToExplore = filter (flip S.notMember visited') (clip sz (genNumbers p))
+      board' = mkBoard (insert p ncell b) sz
+      in
+    case (cell) of
+      Empty{} -> exploreCells (ps ++ neighboursToExplore) visited' board'
+      _ -> exploreCells ps visited' board'
 
 genMines :: Int -> Int -> IO [(Int, Int)]
 genMines size n = nub <$> (sequence $ replicate n $ tups)
