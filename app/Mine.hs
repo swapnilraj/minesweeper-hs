@@ -50,8 +50,7 @@ newtype Board = Board { unBoard :: (Map Point Cell, Size) }
 
 instance Show Board where
   show b = let (board, size) = unBoard b
-               rows = \c -> [ (c, r) | r <- [0..size-1] ]
-               points = rows <$> [0..size-1]
+               points = [ [ (x, y) |  y <- [0..size-1] ] | x <- [0..size-1]]
                showRow row =
                  let c = (!?) board
                      f x = '|':show x
@@ -105,6 +104,10 @@ placeNumber board loc = case (board !? loc) of
                         (Numbered n _) -> insert loc (Numbered (succ n) Hidden) board
                         Mine{} -> board
 
+genMines :: Int -> Int -> IO [(Int, Int)]
+genMines size n = nub <$> (sequence $ replicate n $ tups)
+  where tups = (,) <$> randomRIO (0, size - 1) <*> randomRIO (0, size - 1)
+
 flagCell :: Cell -> Cell
 flagCell (Empty Hidden) = Empty Flagged
 flagCell (Numbered n Hidden) = Numbered n Flagged
@@ -156,6 +159,3 @@ numMines b'
     isMine Mine{} = True
     isMine _ = False
 
-genMines :: Int -> Int -> IO [(Int, Int)]
-genMines size n = nub <$> (sequence $ replicate n $ tups)
-  where tups = (,) <$> randomRIO (0, size - 1) <*> randomRIO (0, size - 1)
