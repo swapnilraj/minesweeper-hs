@@ -18,7 +18,6 @@ import Mine
   , exploreCells
   , flagCell
   , mkBoard
-  , numMines
   , numUnOpenedCells
   )
 
@@ -37,7 +36,7 @@ stepBoard move loc b =
         Flag -> flag
         Reveal -> reveal
 
-gamePlay :: StateT Board IO ()
+gamePlay :: Int -> StateT Board IO ()
 gamePlay mines = do
   board <- get
   let unopened = numUnOpenedCells board
@@ -51,5 +50,5 @@ gamePlay mines = do
   case new of
     Left e -> liftIO $ print e
     Right b -> put b
-  gamePlay
+  gamePlay mines
 

@@ -10,6 +10,8 @@ module Mine
   , exploreCells
   , flagCell
   , getDifficulty
+  , isFlaggedCell
+  , isHiddenCell
   , mkBoard
   , numMines
   , numUnOpenedCells
@@ -159,3 +161,12 @@ numMines b'
     isMine Mine{} = True
     isMine _ = False
 
+isHiddenCell :: Cell -> Bool
+isHiddenCell (Empty Hidden) = True
+isHiddenCell (Numbered _ Hidden) = True
+isHiddenCell (Mine Hidden) = True
+
+isFlaggedCell :: Cell -> Bool
+isFlaggedCell (Empty Hidden) = True
+isFlaggedCell (Numbered _ Hidden) = True
+isFlaggedCell (Mine Hidden) = True

@@ -1,20 +1,7 @@
 module Main where
 
-import Control.Monad.Trans.State(StateT(..), execStateT, get, put)
+import Graphics (setup)
 
-import Mine
-  ( Difficulty(..)
-  , Board(..)
-  , (!?)
-  , createBoard
-  , emptyBoard
-  , getDifficulty
-  )
-import Gameplay
-  ( Move(..)
-  , gamePlay
-  )
+import Graphics.UI.Threepenny.Core
 
-main = do
-  randBoard <- execStateT (createBoard Easy) emptyBoard
-  execStateT gamePlay randBoard
+main = startGUI defaultConfig setup
