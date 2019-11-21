@@ -87,14 +87,14 @@ drawCell cv cell p sz
       | isHiddenCell cell = do
         cv # set' UI.fillStyle (UI.htmlColor tileColor)
         cv # UI.fillRect (toPoint (cellSize + 10) p) cellSize cellSize
-      | isFlaggedCell cell = do mkText "?" cv $ toPoint (cellSize + 10) p
-      | otherwise = case cell of
-                      (Numbered n _) -> do
-                        mkText (show n) cv $ toPoint (cellSize + 10) p
-                      Mine{} -> trace "WHAT" $ mkText "M" cv $ toPoint (cellSize + 10) p
-                      Empty{} -> do
-                        cv # set' UI.fillStyle (UI.htmlColor backgroundColor)
-                        cv # UI.fillRect (toPoint (cellSize + 10) p) cellSize cellSize
+      | isFlaggedCell cell = mkText "?" cv $ toPoint (cellSize + 10) p
+      | otherwise =
+          case cell of
+            (Numbered n _) -> mkText (show n) cv $ toPoint (cellSize + 10) p
+            Mine{} -> mkText "M" cv $ toPoint (cellSize + 10) p
+            Empty{} -> do
+              cv # set' UI.fillStyle (UI.htmlColor backgroundColor)
+              cv # UI.fillRect (toPoint (cellSize + 10) p) cellSize cellSize
   where
     cellSize = fromIntegral $ canvasSize `div` sz - 10
     toPoint :: Double -> (Int, Int) -> (Double, Double)
