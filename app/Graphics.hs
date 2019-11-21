@@ -9,6 +9,8 @@ import Data.IORef(newIORef, readIORef, writeIORef)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
 
+import Debug.Trace
+
 import Mine
   ( Board(..)
   , Cell(..)
@@ -20,6 +22,7 @@ import Mine
   , isFlaggedCell
   , isHiddenCell
   , numMines
+  , numUnOpenedCells
   )
 
 import Gameplay
@@ -42,6 +45,9 @@ setup w = void $ do
   randBoard <- liftIO $ execStateT (createBoard Easy) emptyBoard
   boardRef <- liftIO $ newIORef $ randBoard
 
+  board <- liftIO $ readIORef boardRef
+  let numMines' = numMines board
+
   pure w # set title "Minesweeper"
   bodys' <- getElementsByTagName w "body"
   let body = head bodys'
@@ -52,35 +58,48 @@ setup w = void $ do
     # set UI.width canvasSize
     # set style [("background", backgroundColor)]
 
-  board <- liftIO $ readIORef boardRef
-  drawBoard canvas board
+  drawBoard canvas board numMines'
+
+  let
+    cellSize = fromIntegral $ canvasSize `div` 8 - 10
+
+    loseMessage :: String -> UI ()
+    loseMessage a = mkText' a canvas (100, 100)
+
+    click move point = do
+      b <- liftIO $ readIORef boardRef
+      case (stepBoard move point b) of
+        Left (err, b) -> do
+          (liftIO $ writeIORef boardRef b)
+          loseMessage err -- Force evaluation
+        Right b -> do
+          trace (show b) $ liftIO $ writeIORef boardRef b
+          b <- liftIO $ readIORef boardRef
+          drawBoard canvas b numMines'
 
   on UI.contextmenu canvas
-    $ (click canvas boardRef Flag)
+    $ (click Flag)
     . both (`div` (cellSize + 10))
 
   on UI.mouseup canvas
-    $ (click canvas boardRef Reveal)
+    $ (click Reveal)
     . both (`div` (cellSize + 10))
 
   getBody w #+ [element canvas]
 
-  where
-    cellSize = fromIntegral $ canvasSize `div` 8 - 10
+drawBoard :: Element -> Board -> Int -> UI ()
+drawBoard cv b mines
+  | mines == numUnOpenedCells b = trace "You win" $ mkText' "You win!" cv (100,100)
+  | otherwise =
+    let (board, sz) = unBoard b in
+        forM_ [ [ (x, y) |  y <- [0..sz-1] ] | x <- [0..sz-1] ] $ \row ->
+          forM_ row $ \point -> drawCell cv (board !? point) point sz
 
-    click cv boardRef move point = do
-      b <- liftIO $ readIORef boardRef
-      case (stepBoard move point b) of
-        Left (err, b) -> trace err $ liftIO $ writeIORef boardRef b
-        Right b -> trace (show b) $ liftIO $ writeIORef boardRef b
-      b <- liftIO $ readIORef boardRef
-      drawBoard cv b
-
-drawBoard :: Element -> Board -> UI ()
-drawBoard cv b =
-  let (board, sz) = unBoard b in
-  forM_ [ [ (x, y) |  y <- [0..sz-1] ] | x <- [0..sz-1] ] $ \row ->
-    forM_ row $ \point -> drawCell cv (board !? point) point sz
+mkText' :: String -> Element -> UI.Point -> UI ()
+mkText' txt cv (x, y) = do
+  cv # set' UI.fillStyle (UI.htmlColor "black")
+  cv # set' UI.textFont "40px sans-serif"
+  cv # UI.fillText txt (x, y)
 
 drawCell :: Element -> Cell -> (Int, Int) -> Int -> UI ()
 drawCell cv cell p sz
