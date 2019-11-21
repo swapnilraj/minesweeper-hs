@@ -2,7 +2,7 @@ module Graphics
   ( setup
   ) where
 
-import Control.Monad (forM_, void)
+import Control.Monad (forM_, join, void)
 import Control.Monad.Trans.State(StateT(..), execStateT, get, put)
 import Data.IORef(newIORef, readIORef, writeIORef)
 
@@ -60,6 +60,8 @@ setup w = void $ do
 
   drawBoard canvas board numMines'
 
+  newGame <- UI.button #+ [ string "New Game" ]
+
   let
     cellSize = fromIntegral $ canvasSize `div` 8 - 10
 
@@ -85,7 +87,15 @@ setup w = void $ do
     $ (click Reveal)
     . both (`div` (cellSize + 10))
 
-  getBody w #+ [element canvas]
+  on UI.click newGame
+    $ const
+    $ (liftIO . join
+    $ (writeIORef boardRef) <$> (execStateT (createBoard Easy) emptyBoard))
+      >> drawBoard canvas board numMines'
+
+  getBody w #+ [ element canvas
+               , element newGame
+               ]
 
 drawBoard :: Element -> Board -> Int -> UI ()
 drawBoard cv b mines
