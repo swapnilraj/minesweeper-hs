@@ -114,12 +114,15 @@ flagCell :: Cell -> Cell
 flagCell (Empty Hidden) = Empty Flagged
 flagCell (Numbered n Hidden) = Numbered n Flagged
 flagCell (Mine Hidden) = Mine Flagged
+flagCell (Empty Flagged) = Empty Hidden
+flagCell (Numbered n Flagged) = Numbered n Hidden
+flagCell (Mine Flagged) = Mine Hidden
 flagCell x = x
 
 revealCell :: Point -> Cell -> Cell
 revealCell loc (Empty Hidden) = Empty Open
 revealCell loc (Numbered n Hidden) = Numbered n Open
-revealCell loc (Mine Hidden) = error "Mines should not be opened?" -- Should this be absurd?
+revealCell loc (Mine Hidden) = Mine Open
 revealCell loc x = x
 
  -- Neighbours to explore   Visited        Board
