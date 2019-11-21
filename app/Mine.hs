@@ -165,8 +165,10 @@ isHiddenCell :: Cell -> Bool
 isHiddenCell (Empty Hidden) = True
 isHiddenCell (Numbered _ Hidden) = True
 isHiddenCell (Mine Hidden) = True
+isHiddenCell _ = False
 
 isFlaggedCell :: Cell -> Bool
 isFlaggedCell (Empty Hidden) = True
 isFlaggedCell (Numbered _ Hidden) = True
 isFlaggedCell (Mine Hidden) = True
+isFlaggedCell _ = False

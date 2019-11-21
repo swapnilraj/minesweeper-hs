@@ -27,8 +27,10 @@ import Gameplay
   , gamePlay
   )
 
-backgroundColor = "#484C6B"
-tileColor = "#5B6290"
+both f (x, y) = (f x, f y)
+
+tileColor = "#484C6B"
+backgroundColor = "#5B6290"
 pageBackground = "#7B8C95"
 
 canvasSize :: Int
@@ -65,16 +67,20 @@ drawCell cv cell p sz
       | isHiddenCell cell = do
         cv # set' UI.fillStyle (UI.htmlColor tileColor)
         cv # UI.fillRect (toPoint (cellSize + 10) p) cellSize cellSize
-      | isFlaggedCell cell = do
-        cv # UI.fillText "?" (toPoint (cellSize + 10) p)
+      | isFlaggedCell cell = do mkText "?" cv $ toPoint (cellSize + 10) p
       | otherwise = case cell of
-                      (Numbered n _) ->
-                        cv # UI.fillText (show n) (toPoint (cellSize + 10) p)
-                      Mine{} -> pure ()
-                      _ -> do
-                        cv # set' UI.fillStyle (UI.htmlColor "black")
+                      (Numbered n _) -> do
+                        mkText (show n) cv $ toPoint (cellSize + 10) p
+                      Mine{} -> trace "WHAT" $ mkText "M" cv $ toPoint (cellSize + 10) p
+                      Empty{} -> do
+                        cv # set' UI.fillStyle (UI.htmlColor backgroundColor)
                         cv # UI.fillRect (toPoint (cellSize + 10) p) cellSize cellSize
   where
     cellSize = fromIntegral $ canvasSize `div` sz - 10
     toPoint :: Double -> (Int, Int) -> (Double, Double)
-    toPoint pad (x, y) = (fromIntegral x * pad , fromIntegral y * pad)
+    toPoint pad p = swap $ both (\x -> pad * (fromIntegral x)) p
+    mkText :: String -> Element -> UI.Point -> UI ()
+    mkText txt cv (x, y) = do
+      cv # set' UI.fillStyle (UI.htmlColor "black")
+      cv # set' UI.textFont "40px sans-serif"
+      cv # UI.fillText txt (x+(cellSize / 2)-10,y+((cellSize/2)))
