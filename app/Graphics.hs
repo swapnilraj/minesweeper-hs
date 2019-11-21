@@ -78,7 +78,7 @@ drawCell cv cell p sz
   where
     cellSize = fromIntegral $ canvasSize `div` sz - 10
     toPoint :: Double -> (Int, Int) -> (Double, Double)
-    toPoint pad p = swap $ both (\x -> pad * (fromIntegral x)) p
+    toPoint pad p = both (\x -> pad * (fromIntegral x)) p
     mkText :: String -> Element -> UI.Point -> UI ()
     mkText txt cv (x, y) = do
       cv # set' UI.fillStyle (UI.htmlColor "black")

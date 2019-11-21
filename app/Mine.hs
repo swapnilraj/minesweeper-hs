@@ -52,10 +52,10 @@ newtype Board = Board { unBoard :: (Map Point Cell, Size) }
 
 instance Show Board where
   show b = let (board, size) = unBoard b
-               points = [ [ (x, y) |  y <- [0..size-1] ] | x <- [0..size-1]]
+               points = [ [ (x, y) |  x <- [0..size-1] ] | y <- [0..size-1]]
                showRow row =
-                 let c = (!?) board
-                     f x = '|':show x
+                 let c p = (!?) board p
+                     f x ='|':show x
                   in concat $ f <$> (c <$> row)
             in unlines $ showRow <$> points
 
