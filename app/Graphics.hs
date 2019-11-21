@@ -55,7 +55,26 @@ setup w = void $ do
   board <- liftIO $ readIORef boardRef
   drawBoard canvas board
 
+  on UI.contextmenu canvas
+    $ (click canvas boardRef Flag)
+    . both (`div` (cellSize + 10))
+
+  on UI.mouseup canvas
+    $ (click canvas boardRef Reveal)
+    . both (`div` (cellSize + 10))
+
   getBody w #+ [element canvas]
+
+  where
+    cellSize = fromIntegral $ canvasSize `div` 8 - 10
+
+    click cv boardRef move point = do
+      b <- liftIO $ readIORef boardRef
+      case (stepBoard move point b) of
+        Left (err, b) -> trace err $ liftIO $ writeIORef boardRef b
+        Right b -> trace (show b) $ liftIO $ writeIORef boardRef b
+      b <- liftIO $ readIORef boardRef
+      drawBoard cv b
 
 drawBoard :: Element -> Board -> UI ()
 drawBoard cv b =
