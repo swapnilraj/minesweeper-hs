@@ -23,14 +23,15 @@ import Mine
 
 data Move = Flag | Reveal deriving (Show, Eq, Ord, Read)
 
-stepBoard :: Move -> Point -> Board -> Either String Board
+stepBoard :: Move -> Point -> Board -> Either (String, Board) Board
 stepBoard move loc b =
   let (b', sz) = unBoard b
       val = b' !? loc
       flag = Right $ mkBoard (insert loc (flagCell val) b') sz
+      newBoard = exploreCells [loc] S.empty b
       reveal = case val of
-                 Mine{} -> Left $ "Oops! That was a mine"
-                 _ -> Right $ exploreCells [loc] S.empty b
+                 Mine{} -> Left $ (,) "Oops! That was a mine" newBoard
+                 _ -> Right $ newBoard
    in
       case move of
         Flag -> flag
@@ -48,7 +49,7 @@ gamePlay mines = do
   let move = (read input) :: Move
   let new = stepBoard move point board
   case new of
-    Left e -> liftIO $ print e
+    Left(e, b) -> (liftIO $ print e) >> put b
     Right b -> put b
   gamePlay mines
 

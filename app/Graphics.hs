@@ -25,6 +25,7 @@ import Mine
 import Gameplay
   ( Move(..)
   , gamePlay
+  , stepBoard
   )
 
 both f (x, y) = (f x, f y)
