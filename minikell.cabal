@@ -21,6 +21,8 @@ executable minikell
   other-modules:       Mine
                        , Gameplay
                        , Graphics
+                       , AI
+                       , AIMine
   default-extensions:  FlexibleContexts
                        , StandaloneDeriving
   -- other-extensions:
