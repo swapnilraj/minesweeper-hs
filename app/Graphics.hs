@@ -42,8 +42,8 @@ canvasSize = 768
 
 setup :: Window -> UI ()
 setup w = void $ do
-  randBoard <- liftIO $ execStateT (createBoard Easy) emptyBoard
-  boardRef <- liftIO $ newIORef $ randBoard
+  randBoard <- liftIO $ execStateT (createBoard Mid) emptyBoard
+  boardRef <- liftIO $ newIORef randBoard
 
   board <- liftIO $ readIORef boardRef
   let numMines' = numMines board
