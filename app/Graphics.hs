@@ -33,10 +33,10 @@ import Gameplay
 
 both f (x, y) = (f x, f y)
 
-tileColor = "#2b1b29"
-backgroundColor = "#665164"
-pageBackground = "#271d30"
-textColor = "#d8d3d8"
+tileColor = "#5F2AAF"
+backgroundColor = "#C3A6F7"
+pageBackground = "#E9DEFC"
+textColor = pageBackground
 
 canvasSize :: Int
 canvasSize = 768
