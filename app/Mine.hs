@@ -84,7 +84,7 @@ clip :: (Num a, Ord a) => a -> [(a, a)] -> [(a, a)]
 clip size = let inBounds (x, y) = x < size && y < size && x >= 0 && y >= 0
               in filter inBounds
 
-createBoard :: Difficulty -> StateT Board IO ()
+createBoard :: Difficulty -> StateT Board IO [Point]
 createBoard diff = do
     let (size, mines) = getDifficulty diff
     mineLoc <- liftIO $ genMines size mines
@@ -93,6 +93,7 @@ createBoard diff = do
       let (board', _) = unBoard board_
       put $ mkBoard (insert loc (Mine Hidden) board') size
       placeNumbers loc size
+    pure mineLoc
   where
     placeNumbers loc size = do
       forM_ (clip size (genNumbers loc)) $ \num -> do

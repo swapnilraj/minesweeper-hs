@@ -3,7 +3,7 @@ module Graphics
   ) where
 
 import Control.Monad (forM_, join, void)
-import Control.Monad.Trans.State(StateT(..), execStateT, get, put)
+import Control.Monad.Trans.State(StateT(..), execStateT, get, put, runStateT)
 import Data.IORef(newIORef, readIORef, writeIORef)
 
 import qualified Graphics.UI.Threepenny as UI
@@ -43,8 +43,11 @@ canvasSize = 768
 
 setup :: Window -> UI ()
 setup w = void $ do
-  randBoard <- liftIO $ execStateT (createBoard Mid) emptyBoard
+  randBoard' <- liftIO $ runStateT (createBoard Mid) emptyBoard
+  let (mineLoc, randBoard) = randBoard'
+
   boardRef <- liftIO $ newIORef randBoard
+  mineLocRef <- liftIO $ newIORef mineLoc
 
   board <- liftIO $ readIORef boardRef
   let numMines' = numMines board
@@ -70,7 +73,9 @@ setup w = void $ do
     loseMessage a = mkText' a canvas (100, 100)
 
     newBoardButton diff = do
-      b <- liftIO $ execStateT (createBoard diff) emptyBoard
+      boardWithMines <- liftIO $ runStateT (createBoard diff) emptyBoard
+      let (mineLoc, b) = boardWithMines
+      liftIO $ writeIORef mineLocRef mineLoc
       liftIO $ writeIORef boardRef b
       b' <- liftIO $ readIORef boardRef
       let (_, sz) = unBoard b'
