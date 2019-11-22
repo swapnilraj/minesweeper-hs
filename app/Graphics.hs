@@ -33,9 +33,10 @@ import Gameplay
 
 both f (x, y) = (f x, f y)
 
-tileColor = "#484C6B"
-backgroundColor = "#5B6290"
-pageBackground = "#7B8C95"
+tileColor = "#2b1b29"
+backgroundColor = "#665164"
+pageBackground = "#271d30"
+textColor = "#d8d3d8"
 
 canvasSize :: Int
 canvasSize = 768
@@ -60,13 +61,21 @@ setup w = void $ do
 
   drawBoard canvas board numMines'
 
-  newGame <- UI.button #+ [ string "New Game" ]
+  easyBtn <- UI.button #+ [ string "Easy" ]
+  mediumBtn <- UI.button #+ [ string "Medium" ]
+  hardBtn <- UI.button #+ [ string "Hard" ]
 
   let
-    cellSize = fromIntegral $ canvasSize `div` 8 - 10
-
     loseMessage :: String -> UI ()
     loseMessage a = mkText' a canvas (100, 100)
+
+    newBoardButton diff = do
+      b <- liftIO $ execStateT (createBoard diff) emptyBoard
+      liftIO $ writeIORef boardRef b
+      b' <- liftIO $ readIORef boardRef
+      let (_, sz) = unBoard b'
+      UI.clearCanvas canvas
+      drawBoard canvas b' numMines'
 
     click move point = do
       b <- liftIO $ readIORef boardRef
@@ -75,39 +84,49 @@ setup w = void $ do
           (liftIO $ writeIORef boardRef b)
           loseMessage err -- Force evaluation
         Right b -> do
-          trace (show b) $ liftIO $ writeIORef boardRef b
-          b <- liftIO $ readIORef boardRef
-          drawBoard canvas b numMines'
+          liftIO $ writeIORef boardRef b
+          b' <- liftIO $ readIORef boardRef
+          drawBoard canvas b' (numMines b')
 
   on UI.contextmenu canvas
-    $ (click Flag)
-    . both (`div` (cellSize + 10))
+    $ \(x,y) -> do
+        b <- liftIO $ readIORef boardRef
+        let (_, sz) = unBoard b
+            cellsize = fromIntegral $ (canvasSize `div` sz)
+            p = both (`div` (cellsize)) (x - 10, y - 10)
+        click Flag p
 
   on UI.mouseup canvas
-    $ (click Reveal)
-    . both (`div` (cellSize + 10))
+    $ \(x, y) -> do
+        b <- liftIO $ readIORef boardRef
+        let (_, sz) = unBoard b
+            cellsize = fromIntegral $ (canvasSize `div` sz)
+            p = both (`div` (cellsize)) (x, y)
+        click Reveal p
 
-  on UI.click newGame
-    $ const
-    $ (liftIO . join
-    $ (writeIORef boardRef) <$> (execStateT (createBoard Easy) emptyBoard))
-      >> drawBoard canvas board numMines'
+  on UI.click easyBtn $ const $ newBoardButton Easy
 
-  getBody w #+ [ element canvas
-               , element newGame
+  on UI.click mediumBtn $ const $ newBoardButton Mid
+
+  on UI.click hardBtn $ const $ newBoardButton Hard
+
+  getBody w #+ [ column [ element canvas ]
+               , element easyBtn
+               , element mediumBtn
+               , element hardBtn
                ]
 
 drawBoard :: Element -> Board -> Int -> UI ()
 drawBoard cv b mines
-  | mines == numUnOpenedCells b = trace "You win" $ mkText' "You win!" cv (100,100)
+  | mines == numUnOpenedCells b = mkText' "You win!" cv (100,100)
   | otherwise =
     let (board, sz) = unBoard b in
-        forM_ [ [ (x, y) |  y <- [0..sz-1] ] | x <- [0..sz-1] ] $ \row ->
+        forM_ [ [ (x, y) |  x <- [0..sz-1] ] | y <- [0..sz-1] ] $ \row ->
           forM_ row $ \point -> drawCell cv (board !? point) point sz
 
 mkText' :: String -> Element -> UI.Point -> UI ()
 mkText' txt cv (x, y) = do
-  cv # set' UI.fillStyle (UI.htmlColor "black")
+  cv # set' UI.fillStyle (UI.htmlColor textColor)
   cv # set' UI.textFont "40px sans-serif"
   cv # UI.fillText txt (x, y)
 
@@ -123,13 +142,14 @@ drawCell cv cell p sz
             Mine{} -> mkText "M" cv $ toPoint (cellSize + 10) p
             Empty{} -> do
               cv # set' UI.fillStyle (UI.htmlColor backgroundColor)
+              cv # set' UI.strokeStyle "gray"
               cv # UI.fillRect (toPoint (cellSize + 10) p) cellSize cellSize
   where
-    cellSize = fromIntegral $ canvasSize `div` sz - 10
+    cellSize = fromIntegral $ (canvasSize `div` sz) - 10
     toPoint :: Double -> (Int, Int) -> (Double, Double)
     toPoint pad p = both (\x -> pad * (fromIntegral x)) p
     mkText :: String -> Element -> UI.Point -> UI ()
     mkText txt cv (x, y) = do
-      cv # set' UI.fillStyle (UI.htmlColor "black")
-      cv # set' UI.textFont "40px sans-serif"
+      cv # set' UI.fillStyle (UI.htmlColor textColor)
+      cv # set' UI.textFont ((show cellSize) ++ "px sans-serif")
       cv # UI.fillText txt (x+(cellSize / 2)-10,y+((cellSize/2)))
