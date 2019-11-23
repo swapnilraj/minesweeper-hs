@@ -12,6 +12,8 @@ module AIMine
   , Cell(..)
   , M.Point(..)
   , (!?)
+  , allClosed
+  , size
   ) where
 
 import qualified Mine as M
@@ -23,11 +25,22 @@ import qualified Mine as M
   , isHiddenCell
   )
 
+import Prelude hiding(foldl)
+import Data.Map.Strict(foldl)
+
 data Cell -- Too confusing if its the same name?
   = Hidden
   | Empty
   | Flagged
   | Numbered Int
+  deriving (Eq)
+
+size :: M.Board -> Int
+size b = snd $ M.unBoard b
+
+allClosed :: M.Board -> Bool
+allClosed b' = let (b, _) = M.unBoard b' in
+                   foldl (\acc val -> acc && (humanVision val == Empty)) True b
 
 humanVision :: M.Cell -> Cell
 humanVision c
