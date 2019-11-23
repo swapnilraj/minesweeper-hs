@@ -48,8 +48,7 @@ canvasSize = 768
 
 setup :: Window -> UI ()
 setup w = void $ do
-  randBoard' <- liftIO $ runStateT (createBoard Mid) emptyBoard
-  let (mineLoc, randBoard) = randBoard'
+  (mineLoc, randBoard) <- liftIO $ runStateT (createBoard Mid) emptyBoard
 
   boardRef <- liftIO $ newIORef randBoard
   mineLocRef <- liftIO $ newIORef mineLoc
@@ -59,8 +58,7 @@ setup w = void $ do
 
   pure w # set title "Minesweeper"
   bodys' <- getElementsByTagName w "body"
-  let body = head bodys'
-  (pure body) # set style [("background", pageBackground)]
+  head bodys' # set' style [("background", pageBackground)]
 
   canvas <- UI.canvas
     # set UI.height canvasSize
@@ -79,8 +77,7 @@ setup w = void $ do
     loseMessage a = mkText' a canvas (100, 100)
 
     newBoardButton diff = do
-      boardWithMines <- liftIO $ runStateT (createBoard diff) emptyBoard
-      let (mineLoc, b) = boardWithMines
+      (minLoc, b) <- liftIO $ runStateT (createBoard diff) emptyBoard
       liftIO $ writeIORef mineLocRef mineLoc
       liftIO $ writeIORef boardRef b
       b' <- liftIO $ readIORef boardRef
