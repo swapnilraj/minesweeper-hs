@@ -12,7 +12,7 @@ module AIMine
   , Cell(..)
   , M.Point(..)
   , (!?)
-  , allClosed
+  , allHidden
   , size
   ) where
 
@@ -38,9 +38,10 @@ data Cell -- Too confusing if its the same name?
 size :: M.Board -> Int
 size b = snd $ M.unBoard b
 
-allClosed :: M.Board -> Bool
-allClosed b' = let (b, _) = M.unBoard b' in
-                   foldl (\acc val -> acc && (humanVision val == Empty)) True b
+allHidden :: M.Board -> Bool
+allHidden b' = let (b, _) = M.unBoard b' in
+                   foldl (\acc val -> acc && (humanVision val == Hidden))
+                          True b
 
 humanVision :: M.Cell -> Cell
 humanVision c

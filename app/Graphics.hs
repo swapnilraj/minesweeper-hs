@@ -11,6 +11,11 @@ import Graphics.UI.Threepenny.Core
 
 import Debug.Trace
 
+import AI
+  ( AIMove
+  , solve
+  )
+
 import Mine
   ( Board(..)
   , Cell(..)
@@ -67,6 +72,7 @@ setup w = void $ do
   easyBtn <- UI.button #+ [ string "Easy" ]
   mediumBtn <- UI.button #+ [ string "Medium" ]
   hardBtn <- UI.button #+ [ string "Hard" ]
+  aiBtn <- UI.button #+ [ string "Help AI!!" ]
 
   let
     loseMessage :: String -> UI ()
@@ -115,10 +121,18 @@ setup w = void $ do
 
   on UI.click hardBtn $ const $ newBoardButton Hard
 
+  on UI.click aiBtn $ const $
+    do
+      b <- liftIO $ readIORef boardRef
+      case (solve b) of
+        Left{} -> pure ()
+        Right(m, loc) -> click m loc
+
   getBody w #+ [ column [ element canvas ]
                , element easyBtn
                , element mediumBtn
                , element hardBtn
+               , element aiBtn
                ]
 
 drawBoard :: Element -> Board -> Int -> UI ()
