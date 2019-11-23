@@ -13,6 +13,8 @@ module AIMine
   , M.Point(..)
   , (!?)
   , allHidden
+  , assocs
+  , elems
   , size
   ) where
 
@@ -26,7 +28,8 @@ import qualified Mine as M
   )
 
 import Prelude hiding(foldl)
-import Data.Map.Strict(foldl)
+import qualified Data.Map.Strict as Map(assocs, elems, foldl)
+import Debug.Trace
 
 data Cell -- Too confusing if its the same name?
   = Hidden
@@ -40,8 +43,23 @@ size b = snd $ M.unBoard b
 
 allHidden :: M.Board -> Bool
 allHidden b' = let (b, _) = M.unBoard b' in
-                   foldl (\acc val -> acc && (humanVision val == Hidden))
+                   Map.foldl (\acc val -> acc && (humanVision val == Hidden))
                           True b
+
+elems :: M.Board -> [Cell]
+elems b' = let (b, _) = M.unBoard b' in humanVision <$> Map.elems b
+
+assocs :: M.Board -> [(M.Point, Cell)]
+assocs b' = let (b, _) = M.unBoard b'
+             in (\(p, c) -> (p, humanVision c)) <$> Map.assocs b
+
+-- count :: M.Board -> Cell -> Int
+-- count b' c
+--   = let (b, sz) = M.unBoard b'
+--         countCells n cell
+--           | cell == c = succ n
+--           | otherwise = n
+--       in Map.foldl countCells 0 b
 
 humanVision :: M.Cell -> Cell
 humanVision c
