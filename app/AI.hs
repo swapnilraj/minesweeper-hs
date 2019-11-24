@@ -15,7 +15,6 @@ import AIMine
   )
 
 import Gameplay(Move(..))
-import Z3.Monad
 import Control.Monad(forM_)
 
 type AIMove = (Move, Point)
@@ -65,12 +64,3 @@ count b points c =
     | b !? p == c = succ n
     | otherwise = n
   in foldl matchCell 0 points
-
-
-cell :: MonadZ3 z3 => Int -> Int -> z3 AST
-cell x sz
-  | x == 0 || x == (sz + 1) = mkFreshIntVar $ show x
-  | otherwise = mkFreshIntVar $ show (x+1)
-
-script :: Z3 (Maybe [Integer])
-script = undefined

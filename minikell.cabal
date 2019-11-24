@@ -33,6 +33,5 @@ executable minikell
                        , transformers
                        , MonadRandom
                        , threepenny-gui
-                       , z3
   hs-source-dirs:      app
   default-language:    Haskell2010
