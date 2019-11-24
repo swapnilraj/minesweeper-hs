@@ -67,10 +67,10 @@ setup w = void $ do
 
   drawBoard canvas board numMines'
 
-  easyBtn <- UI.button #+ [ string "Easy" ]
-  mediumBtn <- UI.button #+ [ string "Medium" ]
-  hardBtn <- UI.button #+ [ string "Hard" ]
-  aiBtn <- UI.button #+ [ string "Help AI!!" ]
+  easyBtn <- UI.button # set UI.text "Easy"
+  mediumBtn <- UI.button # set UI.text "Medium"
+  hardBtn <- UI.button # set UI.text "Hard"
+  aiBtn <- UI.button # set UI.text "Help AI!!"
   aiMsg <- UI.paragraph
 
   let
