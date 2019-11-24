@@ -23,28 +23,38 @@ mkMove m l = (,) m l
 
 points size= [ [ (x, y) |  x <- [0..size-1] ] | y <- [0..size-1]]
 
-solve :: Board -> Either [AIMove] AIMove
+isNumbered (Numbered _) = True
+isNumbered _ = False
+
+solve :: Board -> Maybe [AIMove]
 solve b
   -- If all cells are closed guess an edge cell probability tells us that an
   -- edge cell is least likely to have a mine
-  | allHidden b = Right $ mkMove Reveal (0, 0)
-  | otherwise = do
+  | allHidden b = Just $ [ mkMove Reveal (0, 0) ]
+  | otherwise =
     let sz = size b
-    -- find flags
-        onlyFlags = filter ()
-        case (length onlyFlags == 0) of
-          True -> Left $ []
-          -- choice <|>
-          Flase -> decideMove b p
+        onlyNumbered = filter (\(_, v) -> isNumbered v) (assocs b) in
+        case (length onlyNumbered == 0) of
+          True -> Nothing
+          False -> Just $ flattenMybLst $ (\(p, val) -> decideMove b p sz val) <$> onlyNumbered
 
--- Maybe
-decideMove b p (Numbered n)
-  | n == count b Hidden $ clip sz $ genNumbers p = -- Flag
-  | n == count b Flagged $ clip sz $ generated p = -- Reveal
-devideMove _ _ _ = Nothing
+flattenMybLst :: [ Maybe [a] ] -> [a]
+flattenMybLst = foldl (\acc v -> case v of
+                                   Just b -> acc ++ b
+                                   Nothing -> acc
+                                  ) []
 
-count :: Board -> [Point] -> Cell -> Int
-count b points c =
+decideMove :: Board -> Point -> Int -> Cell -> Maybe [AIMove]
+decideMove b p sz (Numbered n)
+  | n == count b Hidden (neighbours p sz) = Just $ (Flag, ) <$> hiddenCells b p sz
+  | n == count b Flagged (neighbours p sz) = Just $ (Reveal, ) <$> hiddenCells b p sz
+decideMove _ _ _ _ = Nothing
+
+hiddenCells b p sz = filter (\p -> b !? p == Hidden) (neighbours p sz)
+neighbours p sz = clip sz (genNeighbours p)
+
+count :: Board -> Cell -> [Point] -> Int
+count b c points =
   let
   matchCell n p
     | b !? p == c = succ n
