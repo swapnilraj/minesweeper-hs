@@ -93,7 +93,9 @@ setup w = void $ do
       b <- liftIO $ readIORef boardRef
       case (stepBoard move point b) of
         Left (err, b) -> do
-          (liftIO $ writeIORef boardRef b)
+          liftIO $ writeIORef boardRef b
+          b' <- liftIO $ readIORef boardRef
+          drawBoard canvas b' (numMines b')
           loseMessage err -- Force evaluation
         Right b -> do
           liftIO $ writeIORef boardRef b
