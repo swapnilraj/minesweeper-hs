@@ -37,13 +37,13 @@ data Cell
   deriving (Eq, Ord)
 
 instance Show Cell where
-  show (Empty Hidden) = " "
-  show (Numbered _ Hidden) = " "
-  show (Mine Hidden) = " "
-  show (Empty Open) = "O"
-  show (Numbered n Open) = show n
-  show (Mine Open) = "M"
-  show _ = "?"
+  show c
+    | isHiddenCell c = " "
+    | isFlaggedCell c = "?"
+    | otherwise = case c of
+                    Empty{} -> "O"
+                    Numbered n _ -> show n
+                    Mine{} -> "M"
 
 type Point = (Int, Int)
 mkBoard :: Map Point Cell -> Int -> Board
