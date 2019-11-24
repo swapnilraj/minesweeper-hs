@@ -5,10 +5,12 @@ module Mine
   , Overlay(..)
   , Point(..)
   , (!?)
+  , clip
   , createBoard
   , emptyBoard
   , exploreCells
   , flagCell
+  , genNeighbours
   , getDifficulty
   , isFlaggedCell
   , isHiddenCell
@@ -69,8 +71,8 @@ getDifficulty Hard = (24, 99)
 (!?) :: Map Point Cell -> Point -> Cell
 (!?) m k = findWithDefault (Empty Hidden) k m
 
-genNumbers :: (Enum a, Enum b) => (a, b) -> [(a, b)]
-genNumbers (x, y) = [ (pred x, pred y)
+genNeighbours :: (Enum a, Enum b) => (a, b) -> [(a, b)]
+genNeighbours (x, y) = [ (pred x, pred y)
                     , (x, pred y)
                     , (succ x, pred y)
                     , (pred x, y)
@@ -96,7 +98,7 @@ createBoard diff = do
     pure mineLoc
   where
     placeNumbers loc size = do
-      forM_ (clip size (genNumbers loc)) $ \num -> do
+      forM_ (clip size (genNeighbours loc)) $ \num -> do
         board_ <- get
         let (board', _) = unBoard board_
         put $ mkBoard (placeNumber board' num) size
@@ -134,7 +136,7 @@ exploreCells (p:ps) visited b' =
       cell = b !? p
       ncell = revealCell p cell
       visited' = S.insert p visited
-      neighboursToExplore = filter (flip S.notMember visited') (clip sz (genNumbers p))
+      neighboursToExplore = filter (flip S.notMember visited') (clip sz (genNeighbours p))
       board' = mkBoard (insert p ncell b) sz
       in
     case (cell) of

@@ -14,7 +14,8 @@ module AIMine
   , (!?)
   , allHidden
   , assocs
-  , elems
+  , M.clip
+  , M.genNeighbours
   , size
   ) where
 
@@ -23,12 +24,14 @@ import qualified Mine as M
   , Cell(..)
   , Point(..)
   , (!?)
+  , clip
   , isFlaggedCell
   , isHiddenCell
+  , genNeighbours
   )
 
 import Prelude hiding(foldl)
-import qualified Data.Map.Strict as Map(assocs, elems, foldl)
+import qualified Data.Map.Strict as Map(assocs, foldl)
 import Debug.Trace
 
 data Cell -- Too confusing if its the same name?
@@ -45,9 +48,6 @@ allHidden :: M.Board -> Bool
 allHidden b' = let (b, _) = M.unBoard b' in
                    Map.foldl (\acc val -> acc && (humanVision val == Hidden))
                           True b
-
-elems :: M.Board -> [Cell]
-elems b' = let (b, _) = M.unBoard b' in humanVision <$> Map.elems b
 
 assocs :: M.Board -> [(M.Point, Cell)]
 assocs b' = let (b, _) = M.unBoard b'

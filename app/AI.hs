@@ -10,8 +10,9 @@ import AIMine
   , (!?)
   , allHidden
   , assocs
-  , elems
+  , clip
   , size
+  , genNeighbours
   )
 
 import Gameplay(Move(..))
@@ -19,21 +20,6 @@ import Control.Monad(forM_)
 
 type AIMove = (Move, Point)
 mkMove m l = (,) m l
-
-genNumbers :: (Enum a, Enum b) => (a, b) -> [(a, b)]
-genNumbers (x, y) = [ (pred x, pred y)
-                    , (x, pred y)
-                    , (succ x, pred y)
-                    , (pred x, y)
-                    , (succ x, y)
-                    , (pred x, succ y)
-                    , (x, succ y)
-                    , (succ x, succ y)
-                    ]
-
-clip :: (Num a, Ord a) => a -> [(a, a)] -> [(a, a)]
-clip size = let inBounds (x, y) = x < size && y < size && x >= 0 && y >= 0
-              in filter inBounds
 
 points size= [ [ (x, y) |  x <- [0..size-1] ] | y <- [0..size-1]]
 
