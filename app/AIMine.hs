@@ -32,7 +32,6 @@ import qualified Mine as M
 
 import Prelude hiding(foldl)
 import qualified Data.Map.Strict as Map(assocs, foldl)
-import Debug.Trace
 
 data Cell -- Too confusing if its the same name?
   = Hidden
