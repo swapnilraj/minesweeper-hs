@@ -4,12 +4,11 @@ module Graphics
 
 import Control.Monad (forM_, join, void)
 import Control.Monad.Trans.State(StateT(..), execStateT, get, put, runStateT)
+import Control.Concurrent(threadDelay)
 import Data.IORef(newIORef, readIORef, writeIORef)
 
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
-
-import Debug.Trace
 
 import AI
   ( AIMove
@@ -74,7 +73,10 @@ setup w = void $ do
 
   let
     loseMessage :: String -> UI ()
-    loseMessage a = mkText' a canvas (100, 100)
+    loseMessage a = do
+      mkText' a canvas (100, 100)
+      liftIO $ threadDelay 1000000
+      newBoardButton Easy
 
     newBoardButton diff = do
       (minLoc, b) <- liftIO $ runStateT (createBoard diff) emptyBoard
@@ -168,4 +170,4 @@ drawCell cv cell p sz
     mkText txt cv (x, y) = do
       cv # set' UI.fillStyle (UI.htmlColor textColor)
       cv # set' UI.textFont ((show cellSize) ++ "px sans-serif")
-      cv # UI.fillText txt (x+(cellSize / 2)-10,y+((cellSize/2)))
+      cv # UI.fillText txt (x+(cellSize / 2)-10,y+((cellSize/2))+12)
