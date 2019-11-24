@@ -44,6 +44,7 @@ textColor = pageBackground
 
 canvasSize :: Int
 canvasSize = 768
+second = 1000000
 
 setup :: Window -> UI ()
 setup w = void $ do
@@ -70,12 +71,13 @@ setup w = void $ do
   mediumBtn <- UI.button #+ [ string "Medium" ]
   hardBtn <- UI.button #+ [ string "Hard" ]
   aiBtn <- UI.button #+ [ string "Help AI!!" ]
+  aiMsg <- UI.paragraph
 
   let
     loseMessage :: String -> UI ()
     loseMessage a = do
       mkText' a canvas (100, 100)
-      liftIO $ threadDelay 1000000
+      liftIO $ threadDelay second
       newBoardButton Easy
 
     newBoardButton diff = do
@@ -124,8 +126,14 @@ setup w = void $ do
     do
       b <- liftIO $ readIORef boardRef
       case (solve b) of
-        Nothing ->  pure ()
-        Just [] -> pure ()
+        Nothing -> do
+          aiMsg # set' UI.text "No move for now! I'll be back"
+          liftIO $ threadDelay second
+          aiMsg # set' UI.text ""
+        Just [] -> do
+          aiMsg # set' UI.text "No move for now! I'll be back"
+          liftIO $ threadDelay second
+          aiMsg # set' UI.text ""
         Just ((m, loc):_) -> do
           click m loc
 
@@ -134,6 +142,7 @@ setup w = void $ do
                , element mediumBtn
                , element hardBtn
                , element aiBtn
+               , element aiMsg
                ]
 
 drawBoard :: Element -> Board -> Int -> UI ()
