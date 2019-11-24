@@ -124,8 +124,10 @@ setup w = void $ do
     do
       b <- liftIO $ readIORef boardRef
       case (solve b) of
-        Left{} -> pure ()
-        Right(m, loc) -> click m loc
+        Nothing ->  pure ()
+        Just [] -> pure ()
+        Just ((m, loc):_) -> do
+          click m loc
 
   getBody w #+ [ column [ element canvas ]
                , element easyBtn
