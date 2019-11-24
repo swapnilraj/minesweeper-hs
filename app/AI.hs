@@ -33,25 +33,25 @@ solve b
   | allHidden b = Just $ [ mkMove Reveal (0, 0) ]
   | otherwise =
     let sz = size b
-        onlyNumbered = filter (\(_, v) -> isNumbered v) (assocs b) in
+        onlyNumbered = filter (isNumbered . snd) (assocs b) in
         case (length onlyNumbered == 0) of
           True -> Nothing
           False -> Just $ flattenMybLst $ (\(p, val) -> decideMove b p sz val) <$> onlyNumbered
 
 flattenMybLst :: [ Maybe [a] ] -> [a]
-flattenMybLst = foldl (\acc v -> case v of
-                                   Just b -> acc ++ b
-                                   Nothing -> acc
-                                  ) []
+flattenMybLst = foldl (\acc v -> acc ++ myb2Lst v) []
+  where
+    myb2Lst (Just n) = n
+    myb2Lst Nothing = []
 
 decideMove :: Board -> Point -> Int -> Cell -> Maybe [AIMove]
 decideMove b p sz (Numbered n)
-  | n == count b Hidden (neighbours p sz) = Just $ (Flag, ) <$> hiddenCells b p sz
-  | n == count b Flagged (neighbours p sz) = Just $ (Reveal, ) <$> hiddenCells b p sz
+  | n == count b Hidden (neighbours p sz) = Just $ (Flag,) <$> hiddenCells b p sz
+  | n == count b Flagged (neighbours p sz) = Just $ (Reveal,) <$> hiddenCells b p sz
 decideMove _ _ _ _ = Nothing
 
 hiddenCells b p sz = filter (\p -> b !? p == Hidden) (neighbours p sz)
-neighbours p sz = clip sz (genNeighbours p)
+neighbours p sz = clip sz $ genNeighbours p
 
 count :: Board -> Cell -> [Point] -> Int
 count b c points =
