@@ -1,3 +1,11 @@
+{- | Module responsible handling all rendering and uesr input related things.
+
+    Also renders helpful messages for the user, like rendering when a 'Mine' is
+    revealed, and when a game is won.
+
+    The 'Help AI!' button tries to make a move or displays a message stating
+    that it can't make a move at the momemnt.
+-}
 module Graphics
   ( setup
   ) where
@@ -35,17 +43,28 @@ import Gameplay
   , stepBoard
   )
 
+-- | Applies a function to both elements in a tuple.
+--
+-- Private to the module.
 both f (x, y) = (f x, f y)
-
+-- | Colors used for the rendering.
+--
+-- Private to the module.
+tileColor, backgroundColor, pageBackground, textColor :: String
 tileColor = "#5F2AAF"
 backgroundColor = "#C3A6F7"
 pageBackground = "#E9DEFC"
 textColor = pageBackground
 
+-- | Size of canvas
+--
+-- Private to the module.
 canvasSize :: Int
 canvasSize = 768
 second = 1000000
 
+-- | Function responsible for setupping all input events and rendering the
+-- board.
 setup :: Window -> UI ()
 setup w = void $ do
   (mineLoc, randBoard) <- liftIO $ runStateT (createBoard Mid) emptyBoard
@@ -74,12 +93,16 @@ setup w = void $ do
   aiMsg <- UI.paragraph
 
   let
+    -- | Renders a message when the user has lost, i.e. revealed a mine.
+    -- Sets up a new a board after a second.
     loseMessage :: String -> UI ()
     loseMessage a = do
       mkText' a canvas (100, 100)
       liftIO $ threadDelay second
       newBoardButton Easy
 
+    -- | Creates and renders a new random board, based on the passed in
+    -- 'Difficulty'.
     newBoardButton diff = do
       (minLoc, b) <- liftIO $ runStateT (createBoard diff) emptyBoard
       liftIO $ writeIORef mineLocRef mineLoc
@@ -89,6 +112,7 @@ setup w = void $ do
       UI.clearCanvas canvas
       drawBoard canvas b' numMines'
 
+    -- | Generic handler for a click, takes a 'Move' and a 'Point'.
     click move point = do
       b <- liftIO $ readIORef boardRef
       case (stepBoard move point b) of
@@ -147,6 +171,11 @@ setup w = void $ do
                , element aiMsg
                ]
 
+-- | Draw function for a 'Board'
+--
+-- 'Threepenny' should have made a typeclass for Diplay.
+--
+-- Private to the module.
 drawBoard :: Element -> Board -> Int -> UI ()
 drawBoard cv b mines
   | mines == numUnOpenedCells b = mkText' "You win!" cv (100,100)
@@ -155,12 +184,26 @@ drawBoard cv b mines
         forM_ [ [ (x, y) |  x <- [0..sz-1] ] | y <- [0..sz-1] ] $ \row ->
           forM_ row $ \point -> drawCell cv (board !? point) point sz
 
+
 mkText' :: String -> Element -> UI.Point -> UI ()
 mkText' txt cv (x, y) = do
   cv # set' UI.fillStyle (UI.htmlColor textColor)
   cv # set' UI.textFont "40px sans-serif"
   cv # UI.fillText txt (x, y)
 
+-- | Function to draw a 'Cell'
+--
+-- A 'Hidden' 'Cell' is rendered as an empty block of color 'tileColor'
+--
+-- A 'Flagged' 'Cell' is rendered as a "?"
+--
+-- An 'Open' 'Mine' is rendered as block of color 'backgroundColor'
+--
+-- An 'Open 'Numbered' is rendered as the number itself.
+--
+-- Am 'Open' Mine is rendered as the letter "M".
+--
+-- Private to the module.
 drawCell :: Element -> Cell -> (Int, Int) -> Int -> UI ()
 drawCell cv cell p sz
       | isHiddenCell cell = do

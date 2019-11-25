@@ -1,3 +1,10 @@
+{-| 'Gameplay' module to progress the game play.
+
+   Contains functions to progress the game with one 'Move', returns an 'Either'
+   with 'Board' in the 'Right' constructor, and a '(String, Board)' in the
+   'Left' constructor where the 'String' is the error message and 'Board' is
+   the state of the 'Board' after making the move.
+-}
 module Gameplay
   ( Move(..)
   , stepBoard
@@ -21,8 +28,12 @@ import Mine
   , numUnOpenedCells
   )
 
+-- | Represents the 'Move', can either be 'Flag' or 'Reveal' a cell.
 data Move = Flag | Reveal deriving (Show, Eq, Ord, Read)
 
+-- | Function to step the game with one 'Move'.
+--
+-- Used in 'Graphics' to process user click events,
 stepBoard :: Move -> Point -> Board -> Either (String, Board) Board
 stepBoard move loc b =
   let (b', sz) = unBoard b
@@ -37,6 +48,14 @@ stepBoard move loc b =
         Flag -> flag
         Reveal -> reveal
 
+-- | Function to play the game in CLI.
+--
+-- First input is the 'Point' and uses the 'Read' instance to process the
+-- 'Point'.
+--
+-- Second input is the 'Move' again the 'Read' instance to process the 'Move'.
+--
+-- Prints the 'Board' and the number of 'Hidden' cells at each step.
 gamePlay :: Int -> StateT Board IO ()
 gamePlay mines = do
   board <- get
